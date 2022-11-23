@@ -97,7 +97,7 @@ public class AmazonUIAutomationTest {
     }
 
     private void changeQty(int qty) {
-        Select qtyDropdown = new Select(webDriver.findElement(By.id("quantity")));
+        Select qtyDropdown = new Select(webDriver.findElement(By.xpath("//*[@id=\"quantity\"]")));
         qtyDropdown.selectByVisibleText(Integer.toString(qty));
         List<WebElement> qtyDropdownOptions = qtyDropdown.getOptions();
         qtyDropdownOptions.get(qty-1).click();
@@ -106,14 +106,16 @@ public class AmazonUIAutomationTest {
     }
 
     private void addToCart() {
-        WebElement atcButton = webDriver.findElement(By.xpath("//*[@id=\"atc-declarative\"]"));
+        WebElement atcButton = webDriver.findElement(By.xpath("//*[@name=\"submit.add-to-cart\"]"));
+        WebDriverWait wait = new WebDriverWait(webDriver, Duration.ofMillis(30000));
+        wait.until(ExpectedConditions.elementToBeClickable(atcButton));
         atcButton.click();
 
-        webDriver.manage().timeouts().implicitlyWait(Duration.ofMillis(500));
+        webDriver.manage().timeouts().implicitlyWait(Duration.ofMillis(15000));
     }
 
     private void goToCart() {
-        WebElement goToCartBtn = webDriver.findElement(By.xpath("//*[@id=\"nav-cart\"]"));
+        WebElement goToCartBtn = webDriver.findElement(By.xpath("//*[@id=\"attach-sidesheet-view-cart-button\"]"));
         goToCartBtn.click();
 
         webDriver.manage().timeouts().implicitlyWait(Duration.ofMillis(500));
@@ -122,12 +124,17 @@ public class AmazonUIAutomationTest {
     private void emptyCart() {
         WebElement itemsListSection = webDriver.findElement(By.xpath("//*[@class=\"sc-list-item-content\"]"));
         WebDriverWait wait = new WebDriverWait(webDriver, Duration.ofMillis(10000));
+        int counter = 0;
+
         if (itemsListSection.isDisplayed()) {
-            List<WebElement> deleteButtons = webDriver.findElements(By.xpath("//span[@data-action=\"delete\" and @data-feature-id=\"delete\"]"));
-            wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//input[@value=\"Delete\"]"))).click();
-            for (WebElement deleteBtn : deleteButtons) {
-                deleteBtn.click();
-                webDriver.manage().timeouts().implicitlyWait(Duration.ofMillis(15000));
+            while (itemsListSection.isDisplayed() && counter < 10) {
+                List<WebElement> deleteButtons = webDriver.findElements(By.xpath("//span[@data-action=\"delete\" and @data-feature-id=\"delete\"]"));
+                for (WebElement deleteBtn : deleteButtons) {
+                    wait.until(ExpectedConditions.elementToBeClickable(deleteBtn)).click();
+                    webDriver.manage().timeouts().implicitlyWait(Duration.ofMillis(15000));
+                    break;
+                }
+                counter++;
             }
         } else {
             System.out.println("Cart page are already empty!");
